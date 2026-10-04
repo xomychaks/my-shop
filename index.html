@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Мой магазин</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="promo">БЕСПЛАТНАЯ ДОСТАВКА ОТ 15 000 ₽</div>
+
+  <header class="header">
+    <button class="icon">☰</button>
+    <div class="logo">ТВОЙ БРЕНД</div>
+    <button class="icon" id="open-cart">🛒 <span id="cart-count">0</span></button>
+  </header>
+
+  <main>
+    <h2>ПОПУЛЯРНЫЕ ТОВАРЫ</h2>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <div class="sheet" id="size-sheet" hidden>
+    <div class="sheet-box">
+      <div class="sheet-title" id="size-title"></div>
+      <div class="sizes" id="sizes"></div>
+      <button class="close" id="size-close">Отмена</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="cart-sheet" hidden>
+    <div class="sheet-box">
+      <div class="sheet-title">КОРЗИНА</div>
+      <div id="cart-items"></div>
+      <div class="total">Итого: <span id="cart-total">0</span> ₽</div>
+      <button class="add" id="checkout">ОФОРМИТЬ ЗАКАЗ</button>
+      <button class="close" id="cart-close">Закрыть</button>
+    </div>
+  </div>
+  <div class="sheet" id="order-sheet" hidden>
+    <div class="sheet-box">
+      <div class="sheet-title">ОФОРМЛЕНИЕ ЗАКАЗА</div>
+      <input class="field" id="f-name" placeholder="Имя" autocomplete="name">
+      <input class="field" id="f-phone" type="tel" placeholder="Телефон" autocomplete="tel">
+      <input class="field" id="f-address" placeholder="Город, улица, дом, квартира" autocomplete="street-address">
+      <div class="error" id="order-error" hidden></div>
+      <div class="total">Итого: <span id="order-total">0</span> ₽</div>
+      <button class="add" id="order-send">ОТПРАВИТЬ ЗАКАЗ</button>
+      <button class="close" id="order-close">Назад</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="done-sheet" hidden>
+    <div class="sheet-box">
+      <div class="sheet-title">ЗАКАЗ ПРИНЯТ</div>
+      <p>Спасибо! Мы свяжемся с вами в ближайшее время.</p>
+      <button class="add" id="done-close">ОК</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
