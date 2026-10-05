@@ -313,3 +313,6 @@ h1, h2 { margin: 0; }
 .order-box .btn-sm:first-of-type { margin-top: 20px; }
 .btn-sm.ghost { background: none; color: #fff; border: 1px solid #555; }
 .note.center { text-align: center; margin: 16px 0 0; }
+
+/* ===== Версия 10: без зума по двойному тапу ===== */
+html, body, button, a, .size, .tbtn, .chip, .cat { touch-action: manipulation; }

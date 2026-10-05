@@ -109,6 +109,7 @@ $('see-cats').addEventListener('click', () => go('catalog'));
 // ----- Карточка товара -----
 function makeCard(p) {
   const el = document.createElement('div');
+    el.dataset.img = p.img;
   el.innerHTML =
     '<div class="photo" style="background-image:url(' + p.img + ')"></div>' +
     '<div class="name">' + p.name + '</div>' +
@@ -281,10 +282,32 @@ const io = new IntersectionObserver((entries) => {
 }, { threshold: 0.15 });
 document.querySelectorAll('.cat').forEach((el) => io.observe(el));
 
+// ----- Предзагрузка фото: плитки показываем, когда картинка уже готова -----
+const loadedImgs = {};
+function whenLoaded(src) {
+  if (!src) return Promise.resolve();
+  if (!loadedImgs[src]) {
+    loadedImgs[src] = new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => (im.decode ? im.decode().catch(() => {}).then(resolve) : resolve());
+      im.onerror = resolve;
+      im.src = src;
+      setTimeout(resolve, 4000); // не ждём дольше 4 секунд
+    });
+  }
+  return loadedImgs[src];
+}
+products.forEach((p) => whenLoaded(p.img)); // заранее грузим все фото
+
 // Появление при прокрутке: карточки на главной, линия миссии и блок Telegram
 const reveal = new IntersectionObserver((entries) => {
   entries.forEach((e) => {
-    if (e.isIntersecting) { e.target.classList.add('in'); reveal.unobserve(e.target); }
+    if (e.isIntersecting) {
+      const el = e.target;
+      reveal.unobserve(el);
+      // ждём, пока фото загрузится, и только потом плавно показываем плитку
+      whenLoaded(el.dataset.img).then(() => el.classList.add('in'));
+    }
   });
 }, { threshold: 0.15 });
 document.querySelectorAll('#grid > div').forEach((el, i) => { el.style.setProperty('--i', i); el.classList.add('reveal'); reveal.observe(el); });
@@ -578,3 +601,5 @@ document.querySelectorAll('.sheet').forEach((sheet) => {
     },
   });
 });
+
+document.addEventListener('gesturestart', (e) => e.preventDefault());
