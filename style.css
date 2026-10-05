@@ -316,3 +316,7 @@ h1, h2 { margin: 0; }
 
 /* ===== Версия 10: без зума по двойному тапу ===== */
 html, body, button, a, .size, .tbtn, .chip, .cat { touch-action: manipulation; }
+
+/* ===== Версия 11: без зума везде и без «мыла» на фото каталога ===== */
+* { touch-action: manipulation; }
+.photo, .size-photo { filter: none; }

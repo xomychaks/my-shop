@@ -219,7 +219,7 @@ function wind() {
 
 // ----- «Мыло» при прокрутке страницы и плавная прокрутка колесом мыши -----
 const root = document.documentElement;
-const SOAP_MAX = 1.2; // насколько размываются фото при быстрой прокрутке (px). 0 — выключить
+const SOAP_MAX = 0; // насколько размываются фото при быстрой прокрутке (px). 0 — выключить
 let lastY = window.scrollY, soap = 0, soapOn = false;
 
 window.addEventListener('scroll', () => {
@@ -603,3 +603,18 @@ document.querySelectorAll('.sheet').forEach((sheet) => {
 });
 
 document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+// iPhone: двойной тап не приближает страницу, но каждый быстрый тап считается как нажатие
+let lastTap = 0, tapX = 0, tapY = 0;
+document.addEventListener('touchstart', (e) => { tapX = e.touches[0].clientX; tapY = e.touches[0].clientY; }, { passive: true });
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  const t = e.changedTouches[0];
+  const moved = Math.abs(t.clientX - tapX) > 10 || Math.abs(t.clientY - tapY) > 10;
+  if (now - lastTap < 350 && !moved) {
+    e.preventDefault(); // отменяем зум
+    const btn = e.target.closest('button, a, .size, [role="button"]');
+    if (btn) btn.click(); // и вручную засчитываем нажатие
+  }
+  lastTap = now;
+}, { passive: false });
