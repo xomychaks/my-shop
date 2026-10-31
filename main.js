@@ -52,7 +52,7 @@ const products = [
     id: 2, cat: 'tshirt', name: 'Футболка "Leopard"', price: 1450, sizes: ['XS', 'S', 'M', 'L'],
     img: 'images/cat-tshirt.jpg',
     images: ['images/tshirt-1.jpg', 'images/tshirt-3.jpg', 'images/together.jpg', 'images/sizes.jpg'],
-    video: 'images/fit2.mp4',
+    video: 'images/fit2.mp4', poster: 'images/fit2-poster.jpg',
     soldOut: false,
     tags: 'майка леопард leopard',
     desc: 'Одна футболка на каждый день.',
@@ -64,7 +64,7 @@ const products = [
     id: 4, cat: 'longsleeve', name: 'Лонгслив "Leopard"', price: 1850, sizes: ['XS', 'S', 'M', 'L'],
     img: 'images/cat-longsleeve.jpg',
     images: ['images/longsleeve-2.jpg', 'images/longsleeve-3.jpg', 'images/together.jpg', 'images/sizes.jpg'],
-    video: 'images/fit2.mp4',
+    video: 'images/fit2.mp4', poster: 'images/fit2-poster.jpg',
     soldOut: false,
     tags: 'лонг леопард leopard',
     desc: 'Один лонгслив на все случаи жизни.',
@@ -129,6 +129,26 @@ $('tg-link').href = TG_URL;
 // Бегущая строка
 const unit = '<span>БЕСПЛАТНАЯ ДОСТАВКА ОТ ТРЁХ ВЕЩЕЙ</span><span>/</span>';
 document.querySelectorAll('.track').forEach((t) => { t.innerHTML = unit.repeat(10); });
+// Двигаем строку сами (не CSS): так она не замирает на телефоне
+(function () {
+  const tracks = [...document.querySelectorAll('.track')];
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { tracks.forEach((t) => { t.style.animation = 'none'; }); return; }
+  tracks.forEach((t) => { t.style.animation = 'none'; t.style.willChange = 'transform'; t._x = 0; });
+  let last = 0;
+  function frame(ts) {
+    const dt = Math.min(ts - (last || ts), 100);
+    last = ts;
+    tracks.forEach((t) => {
+      if (!t.offsetParent) return;
+      const half = t.scrollWidth / 2;
+      if (!half) return;
+      t._x = (t._x + dt * half / 30000) % half;
+      t.style.transform = 'translate3d(' + (-t._x).toFixed(1) + 'px,0,0)';
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
 
 // ----- Страницы: главная, каталог, помощь -----
 const views = { home: $('view-home'), catalog: $('view-catalog'), help: $('view-help'), product: $('view-product') };
@@ -161,6 +181,7 @@ function go(name, arg) {
   document.querySelectorAll('.promo')[1].hidden = name === 'help'; // в «Помощи» нижняя строка не нужна
   $('menu-sheet').hidden = true;
   window.scrollTo(0, 0);
+  if (window.roarRedraw) window.roarRedraw(); // леопард сразу в начальном виде, без тёмного экрана
 }
 
 if (inTg && tg.BackButton) {
@@ -549,10 +570,12 @@ function renderProduct(p) {
     const d = document.createElement('button');
     d.className = 'g-dot' + (i === 0 ? ' on' : '');
     d.setAttribute('aria-label', 'Фото ' + (i + 1));
-    d.addEventListener('click', () => track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' }));
+    d.addEventListener('click', () => gGo(i));
     dots.appendChild(d);
   });
   track.scrollLeft = 0;
+  gTarget = 0; gBusyUntil = 0;
+  photos.forEach((src) => { const im = new Image(); im.src = src; }); // заранее, чтобы не было белых кадров
   const many = photos.length > 1;
   dots.hidden = !many;
   $('g-prev').hidden = !many;
@@ -585,8 +608,22 @@ function updateGallery() {
   $('g-next').classList.toggle('off', i === n - 1);
 }
 $('g-track').addEventListener('scroll', updateGallery, { passive: true });
-$('g-prev').addEventListener('click', () => $('g-track').scrollBy({ left: -$('g-track').clientWidth, behavior: 'smooth' }));
-$('g-next').addEventListener('click', () => $('g-track').scrollBy({ left: $('g-track').clientWidth, behavior: 'smooth' }));
+// Стрелки и точки: идём к точному номеру фото, поэтому быстрые нажатия не ломают ряд
+let gTarget = 0, gBusyUntil = 0;
+function gIndex() {
+  const t = $('g-track');
+  return Math.max(0, Math.min(t.children.length - 1, Math.round(t.scrollLeft / (t.clientWidth || 1))));
+}
+function gGo(i) {
+  const t = $('g-track');
+  i = Math.max(0, Math.min(t.children.length - 1, i));
+  gTarget = i;
+  gBusyUntil = Date.now() + 500;
+  t.scrollTo({ left: i * t.clientWidth, behavior: 'smooth' });
+}
+function gBase() { return Date.now() < gBusyUntil ? gTarget : gIndex(); }
+$('g-prev').addEventListener('click', () => gGo(gBase() - 1));
+$('g-next').addEventListener('click', () => gGo(gBase() + 1));
 
 function updateBuy() {
   $('pdp-size-label').textContent = pdp.size || 'НЕ ВЫБРАН';
@@ -627,16 +664,41 @@ $('fit-close').addEventListener('click', () => { $('fit-sheet').hidden = true; }
 const introSeen = {};
 const introVideo = $('intro-video');
 
-function playIntro(p, force) {
-  if (!p || !p.video || (introSeen[p.id] && !force)) return;
-  introSeen[p.id] = true;
+let introSrc = '';
+function loadIntro(p) {
+  if (!p || !p.video || introSrc === p.video) return;
+  introSrc = p.video;
+  introVideo.preload = 'auto';
+  if (p.poster) introVideo.poster = p.poster;
   introVideo.src = p.video;
-  introVideo.currentTime = 0;
+  introVideo.load();
+}
+function showIntro() {
+  try { introVideo.currentTime = 0; } catch (e) {}
   $('intro-bar').style.width = '0%';
   $('intro-sheet').hidden = false;
   const started = introVideo.play();
   if (started && started.catch) started.catch(() => { $('intro-sheet').hidden = true; }); // если телефон не дал включить
 }
+function playIntro(p, force) {
+  if (!p || !p.video || (introSeen[p.id] && !force)) return;
+  loadIntro(p);
+  if (force) { introSeen[p.id] = true; showIntro(); return; } // кнопка «Смотреть видео»: сразу, с кадром-заставкой
+  // Само при открытии товара: только когда видео уже готово, иначе не мешаем (без тёмного окна)
+  let done = false;
+  const start = () => {
+    if (done) return;
+    done = true;
+    if (currentView === 'product' && pdp.p === p) { introSeen[p.id] = true; showIntro(); }
+  };
+  if (introVideo.readyState >= 3) start();
+  else {
+    introVideo.addEventListener('canplay', start, { once: true });
+    setTimeout(() => { if (!done) { done = true; introVideo.removeEventListener('canplay', start); } }, 2500);
+  }
+}
+// Видео подгружаем заранее, пока человек смотрит главную
+setTimeout(() => { if (heroProducts[0]) loadIntro(heroProducts[0]); }, 2500);
 introVideo.addEventListener('timeupdate', () => {
   if (introVideo.duration) $('intro-bar').style.width = (introVideo.currentTime / introVideo.duration * 100) + '%';
 });
@@ -736,6 +798,7 @@ $('search-close').addEventListener('click', () => { $('search-sheet').hidden = t
 
   window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(draw); } }, { passive: true });
   window.addEventListener('resize', draw);
+  window.roarRedraw = draw;
   draw();
 })();
 

@@ -343,9 +343,9 @@ html, body, button, a, .size, .tbtn, .chip, .cat { touch-action: manipulation; }
 .crumbs .here { color: #fff; }
 
 .gallery { position: relative; }
-.g-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; border-radius: 6px; background: #fff; }
+.g-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; border-radius: 6px; background: var(--gray); }
 .g-track::-webkit-scrollbar { display: none; }
-.g-slide { flex: 0 0 100%; aspect-ratio: 4 / 5; scroll-snap-align: center; background: var(--gray) center / cover; }
+.g-slide { flex: 0 0 100%; scroll-snap-stop: always; aspect-ratio: 4 / 5; scroll-snap-align: center; background: var(--gray) center / cover; }
 .g-arrow { position: absolute; top: 50%; translate: 0 -50%; width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 16px; transition: opacity 0.2s ease; }
 .g-arrow.prev { left: 10px; }
 .g-arrow.next { right: 10px; }
@@ -425,14 +425,14 @@ html, body, button, a, .size, .tbtn, .chip, .cat { touch-action: manipulation; }
 .roar-stage { position: relative; height: 80vh; overflow: hidden; color: #000; }
 .roar-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 60%, #e2e2e2 0%, #cfcfcf 100%); }
 .roar-word { position: absolute; left: 0; right: 0; top: -4%; display: flex; flex-direction: column; align-items: center; font-family: 'Phomiz', sans-serif; font-weight: 700; font-size: min(80vw, 400px); line-height: 0.85; letter-spacing: -0.03em; color: transparent; -webkit-text-stroke: 1px #000; text-transform: uppercase; user-select: none; }
-.roar-leo-wrap { position: absolute; left: 0; bottom: 0; height: min(78%, 170vw, 780px); aspect-ratio: 356 / 655; transform: translate(0, 0); transform-origin: 0 90%; pointer-events: none; }
+.roar-leo-wrap { position: absolute; left: -14%; bottom: 0; height: min(78%, calc(1.5 * min(100vw, 480px))); aspect-ratio: 356 / 655; transform: translate(0, 0); transform-origin: 0 90%; pointer-events: none; }
 .roar-leo { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
 /* Свет из пасти */
 .roar-glow { position: absolute; left: 80%; top: 26%; width: 90%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%) scale(0.12); opacity: 0; background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.85) 20%, rgba(255, 255, 255, 0) 65%); will-change: transform, opacity; }
 .roar-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 
 /* Когда анимация включена: секция длиннее экрана, сцена приклеена к нему */
-.roar.live { height: 200vh; height: 200svh; margin-bottom: -100vh; margin-bottom: -100svh; }
+.roar.live { height: 150vh; height: 150svh; margin-bottom: -100vh; margin-bottom: -100svh; }
 .roar.live .roar-stage { position: sticky; top: 0; height: 100vh; height: 100svh; z-index: 2; pointer-events: none; }
 .roar.live .roar-leo-wrap { will-change: transform; }
 
