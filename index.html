@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>PHOMIZ</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="main.css?v=4">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -13,14 +13,32 @@
   <header class="header">
     <button class="icon" id="open-menu">☰</button>
     <div class="logo" id="logo">PHOMIZ</div>
-    <button class="icon" id="open-cart">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.4 11h10.2L20 7H6.5"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>
-      <span id="cart-count">0</span>
-    </button>
+    <div class="head-right">
+      <button class="icon" id="open-search" aria-label="Поиск">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg>
+      </button>
+      <button class="icon" id="open-cart">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.4 11h10.2L20 7H6.5"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>
+        <span id="cart-count">0</span>
+      </button>
+    </div>
   </header>
 
   <!-- ГЛАВНАЯ -->
   <div id="view-home">
+    <!-- Леопард: открывает сайт; листаешь, он рычит, вспышка, и появляется магазин -->
+    <section class="roar" id="roar" aria-hidden="true">
+      <div class="roar-stage">
+        <div class="roar-bg"></div>
+        <div class="roar-word"><span>CREATE</span><span>YOURSELF</span></div>
+        <div class="roar-leo-wrap" id="roar-leo">
+          <img class="roar-leo" src="images/leopard.png" alt="" draggable="false">
+          <div class="roar-glow" id="roar-glow"></div>
+        </div>
+        <div class="roar-flash" id="roar-flash"></div>
+      </div>
+    </section>
+
     <section class="hero">
       <video class="hero-video" src="images/hero.mp4" autoplay muted loop playsinline></video>
       <div class="hero-text">
@@ -87,15 +105,60 @@
   </section>
 </div>
 
+
+  <!-- СТРАНИЦА ТОВАРА -->
+  <div id="view-product" hidden>
+    <section class="section pdp">
+      <div class="crumbs">
+        <button data-go="home">ГЛАВНАЯ</button><span>/</span><button data-go="catalog">КАТАЛОГ</button><span>/</span><span class="here" id="pdp-crumb"></span>
+      </div>
+
+      <div class="gallery" id="gallery">
+        <div class="g-track" id="g-track"></div>
+        <button class="g-arrow prev" id="g-prev" aria-label="Назад">←</button>
+        <button class="g-arrow next" id="g-next" aria-label="Вперёд">→</button>
+      </div>
+      <div class="g-dots" id="g-dots"></div>
+
+      <h1 class="pdp-title" id="pdp-title"></h1>
+      <p class="pdp-desc" id="pdp-desc"></p>
+      <ul class="pdp-details" id="pdp-details"></ul>
+      <div class="pdp-price" id="pdp-price"></div>
+
+      <div id="pdp-choose">
+        <div class="small">РАЗМЕР: <span id="pdp-size-label">НЕ ВЫБРАН</span></div>
+        <div class="sizes" id="pdp-sizes"></div>
+        <button class="pdp-link" id="pdp-fit">ПОДОБРАТЬ РАЗМЕР</button>
+      </div>
+      <button class="pdp-link" id="pdp-video" hidden>СМОТРЕТЬ ВИДЕО</button>
+      <button class="pdp-link" data-go="help">ДОСТАВКА И ПОМОЩЬ О ПОКУПКЕ</button>
+
+      <div class="pdp-sold" id="pdp-sold" hidden>SOLD OUT</div>
+
+      <div class="pdp-buy" id="pdp-buy">
+        <div class="pdp-qty"><button id="pdp-minus" aria-label="Меньше">−</button><span id="pdp-qty">1</span><button id="pdp-plus" aria-label="Больше">+</button></div>
+        <button class="add" id="pdp-add" disabled>ВЫБЕРИТЕ РАЗМЕР</button>
+      </div>
+
+      <h2 class="pdp-h">ОПИСАНИЕ</h2>
+      <p class="pdp-text" id="pdp-text"></p>
+
+      <div id="pdp-care-box">
+        <h2 class="pdp-h">УХОД</h2>
+        <p class="pdp-text" id="pdp-care"></p>
+      </div>
+    </section>
+  </div>
+
   <div class="promo"><div class="track"></div></div>
 
   <footer class="footer">
-    <div class="logo-big">PHOMIZ</div>
     <div class="tg">
       <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M22 3 2.5 10.5l5.5 2 2 6.5 3-3.5 5 3.7z"/></svg>
       <h2>БУДЬ В КУРСЕ НОВЫХ ПРЕДЛОЖЕНИЙ В ЧИСЛЕ ПЕРВЫХ</h2>
      <a class="btn-sm" id="tg-link" href="#" target="_blank" rel="noopener">ПОДПИСАТЬСЯ В TELEGRAM</a>
     </div>
+    <div class="wordmark" id="wordmark" aria-label="PHOMIZ"><span>PHOMIZ</span></div>
   </footer>
 
   <!-- Меню (выезжает слева) -->
@@ -115,6 +178,34 @@
       <div class="sheet-title">ЧТО ХОТИТЕ ЗАКАЗАТЬ?</div>
       <div id="pick"></div>
       <button class="close" id="pick-close">Отмена</button>
+    </div>
+  </div>
+
+
+  <!-- Размерная сетка -->
+  <div class="sheet" id="fit-sheet" hidden>
+    <div class="sheet-box">
+      <div class="drawer-head"><span>РАЗМЕРНАЯ СЕТКА</span><button class="del" id="fit-close">✕</button></div>
+      <div id="fit-body"></div>
+      <a class="btn-sm" id="fit-manager" href="https://t.me/phomiz_brand" target="_blank" rel="noopener">СПРОСИТЬ У МЕНЕДЖЕРА</a>
+    </div>
+  </div>
+
+  <!-- Поиск -->
+  <div class="sheet full search" id="search-sheet" hidden>
+    <div class="sheet-box">
+      <button class="del" id="search-close">✕</button>
+      <input class="field" id="search-input" type="search" placeholder="Поиск по товарам" autocomplete="off" enterkeyhint="search">
+      <div id="search-results"></div>
+    </div>
+  </div>
+
+  <!-- Видео товара на весь экран -->
+  <div class="sheet intro" id="intro-sheet" hidden>
+    <div class="sheet-box">
+      <video id="intro-video" muted playsinline preload="auto"></video>
+      <div class="intro-bar"><i id="intro-bar"></i></div>
+      <button class="intro-skip" id="intro-skip">ПРОПУСТИТЬ</button>
     </div>
   </div>
 
@@ -166,6 +257,6 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="main.js?v=4"></script>
 </body>
 </html>
