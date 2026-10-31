@@ -277,6 +277,7 @@ h1, h2 { margin: 0; }
 .txt .w { display: inline-block; white-space: nowrap; }
 .txt:not(.on) .c { opacity: 0; }
 .txt.on .c { animation: block 0.5s steps(4, end) both; animation-delay: var(--d, 0ms); }
+.txt.done .c { animation: none; opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .txt .c { opacity: 1 !important; }
@@ -443,3 +444,9 @@ html, body, button, a, .size, .tbtn, .chip, .cat { touch-action: manipulation; }
 /* Большая надпись PHOMIZ в самом низу */
 .wordmark { margin-top: 40px; line-height: 0.8; overflow: hidden; }
 .wordmark span { display: inline-block; white-space: nowrap; font-family: 'Phomiz', sans-serif; font-weight: 700; font-size: 20vw; letter-spacing: -0.03em; text-transform: uppercase; -webkit-text-stroke: 0.02em #fff; padding-bottom: 0.02em; }
+
+/* ===== Версия 15: облегчённая сцена леопарда (Android / слабые телефоны) ===== */
+.roar-word { will-change: transform; }
+.roar.lite .roar-word { will-change: auto; }
+.roar.lite .roar-glow { will-change: opacity; }
+.roar.live .roar-stage { contain: paint; }

@@ -465,7 +465,12 @@ function buildText(el, byChar) {
 
 const textIO = new IntersectionObserver((entries) => {
   entries.forEach((e) => {
-    if (e.isIntersecting) { e.target.classList.add('on'); textIO.unobserve(e.target); }
+    if (e.isIntersecting) {
+      const t = e.target;
+      t.classList.add('on');
+      textIO.unobserve(t);
+      setTimeout(() => t.classList.add('done'), 1400); // анимация букв закончена: фиксируем текст целиком
+    }
   });
 }, { threshold: 0.2 });
 
@@ -761,32 +766,45 @@ $('search-close').addEventListener('click', () => { $('search-sheet').hidden = t
   const range = (p, a, b) => clamp((p - a) / (b - a), 0, 1);       // доля пути между a и b
   let fired = false, ticking = false, lastP = 0, lastBuzz = 0;
 
+  // На слабых и Android-телефонах включаем облегчённый вариант: меньше больших слоёв, иначе экран «рвётся»
+  const lite = /Android/i.test(navigator.userAgent) || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+  if (lite) sec.classList.add('lite');
+
+  // Пишем в стиль только когда значение изменилось: меньше работы на каждый кадр
+  const last = {};
+  function put(key, el, prop, val) {
+    if (last[key] !== val) { last[key] = val; el.style[prop] = val; }
+  }
+
   function draw() {
     ticking = false;
     const r = sec.getBoundingClientRect();
     const total = r.height - window.innerHeight;
     if (total <= 0) return;
     const p = clamp(-r.top / total, 0, 1);
-    const hidden = p >= 0.8; // после вспышки сцена убрана, под ней уже магазин
+    const hidden = p >= 0.8;   // после вспышки сцена убрана, под ней уже магазин
+    const vis = hidden ? 'hidden' : 'visible'; // visibility, а не opacity: скрытое вообще не рисуется и не занимает память
 
     // Леопард чуть приближается и поднимается
     const move = ease(range(p, 0, 0.7));
-    leo.style.transform = 'translate(0, ' + ((1 - move) * 1).toFixed(2) + '%) scale(' + (0.97 + 0.07 * move).toFixed(3) + ')';
-    leo.style.opacity = hidden ? 0 : 1;
-    bg.style.opacity = hidden ? 0 : 1;
+    put('leoT', leo, 'transform', 'translate(0, ' + ((1 - move) * 1).toFixed(1) + '%) scale(' + (0.97 + 0.07 * move).toFixed(3) + ')');
+    put('leoV', leo, 'visibility', vis);
+    put('bgV', bg, 'visibility', vis);
 
-    // Надпись за ним плывёт в сторону
-    word.style.transform = 'translateX(' + ((p - 0.4) * -22).toFixed(2) + '%)';
-    word.style.opacity = hidden ? 0 : 0.9;
+    // Надпись за ним плывёт в сторону (в облегчённом варианте стоит на месте)
+    put('wordT', word, 'transform', lite ? 'translate3d(-8%,0,0)' : 'translate3d(' + ((p - 0.4) * -22).toFixed(1) + '%,0,0)');
+    put('wordV', word, 'visibility', vis);
 
-    // Свет из пасти: сначала небольшое сияние, потом заливает весь экран
-    const g = 0.12 + 0.88 * ease(range(p, 0.08, 0.5)) + 7 * ease(range(p, 0.5, 0.8));
-    glow.style.transform = 'translate(-50%, -50%) scale(' + g.toFixed(3) + ')';
-    glow.style.opacity = hidden ? 0 : ease(range(p, 0.05, 0.35));
+    // Свет из пасти: сначала небольшое сияние, потом нарастает; весь экран заливает вспышка ниже
+    const g = lite ? 1 : 0.12 + 0.88 * ease(range(p, 0.08, 0.5)) + 1.4 * ease(range(p, 0.5, 0.8));
+    put('glowT', glow, 'transform', 'translate(-50%, -50%) scale(' + g.toFixed(2) + ')');
+    put('glowO', glow, 'opacity', hidden ? '0' : ease(range(p, 0.05, 0.35)).toFixed(2));
+    put('glowV', glow, 'visibility', vis);
 
     // Вспышка: нарастает до белого экрана, потом гаснет и открывается магазин
-    const f = p < 0.8 ? ease(range(p, 0.6, 0.8)) : 1 - ease(range(p, 0.8, 1));
-    flash.style.opacity = f.toFixed(3);
+    const f = p < 0.8 ? ease(range(p, 0.5, 0.8)) : 1 - ease(range(p, 0.8, 1));
+    put('flashO', flash, 'opacity', f.toFixed(2));
+    put('flashV', flash, 'visibility', p >= 0.995 ? 'hidden' : 'visible');
 
     // Телефон: лёгкая вибрация, пока листаешь и он рычит; «бам» на вспышке
     const now = Date.now();
@@ -1023,9 +1041,11 @@ document.querySelectorAll('.sheet').forEach((sheet) => {
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 
 // iPhone: двойной тап не приближает страницу, но каждый быстрый тап считается как нажатие
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 let lastTap = 0, tapX = 0, tapY = 0;
 document.addEventListener('touchstart', (e) => { tapX = e.touches[0].clientX; tapY = e.touches[0].clientY; }, { passive: true });
 document.addEventListener('touchend', (e) => {
+  if (!isIOS) return; // на Android этот приём не нужен и мешает (меню открывалось и сразу закрывалось)
   const now = Date.now();
   const t = e.changedTouches[0];
   const moved = Math.abs(t.clientX - tapX) > 10 || Math.abs(t.clientY - tapY) > 10;
