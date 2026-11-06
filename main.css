@@ -450,3 +450,13 @@ html, body, button, a, .size, .tbtn, .chip, .cat { touch-action: manipulation; }
 .roar.lite .roar-word { will-change: auto; }
 .roar.lite .roar-glow { will-change: opacity; }
 .roar.live .roar-stage { contain: paint; }
+
+/* ===== Версия 16: выбор цвета ===== */
+.colors { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 18px; }
+.color { display: flex; align-items: center; gap: 8px; padding: 11px 16px; background: var(--gray); color: var(--text); border: 1px solid #333; border-radius: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; transition: background 0.2s ease, color 0.2s ease, scale 0.15s ease; }
+.color:active { scale: 0.95; }
+.color i { display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--c); border: 1px solid #777; }
+.color.on { background: #fff; color: #000; }
+.color.on i { border-color: #000; }
+#pdp-color-box[hidden] { display: none; }
+html, body, button, a, .size, .color, .tbtn, .chip, .cat { touch-action: manipulation; }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>PHOMIZ</title>
-  <link rel="stylesheet" href="main.css?v=6">
+  <link rel="stylesheet" href="main.css?v=9">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -126,6 +126,10 @@
       <div class="pdp-price" id="pdp-price"></div>
 
       <div id="pdp-choose">
+        <div id="pdp-color-box">
+          <div class="small">ЦВЕТ: <span id="pdp-color-label">НЕ ВЫБРАН</span></div>
+          <div class="sizes colors" id="pdp-colors"></div>
+        </div>
         <div class="small">РАЗМЕР: <span id="pdp-size-label">НЕ ВЫБРАН</span></div>
         <div class="sizes" id="pdp-sizes"></div>
         <button class="pdp-link" id="pdp-fit">ПОДОБРАТЬ РАЗМЕР</button>
@@ -216,6 +220,8 @@
       <div class="size-photo" id="size-photo"></div>
       <div class="sheet-title" id="size-title"></div>
       <div class="price" id="size-price"></div>
+      <div class="small" id="size-color-label" hidden>ВЫБЕРИТЕ ЦВЕТ</div>
+      <div class="sizes colors" id="size-colors" hidden></div>
       <div class="small">ВЫБЕРИТЕ РАЗМЕР</div>
       <div class="sizes" id="sizes"></div>
       <button class="add" id="size-add" disabled>В КОРЗИНУ</button>
@@ -257,6 +263,6 @@
     </div>
   </div>
 
-  <script src="main.js?v=6"></script>
+  <script src="main.js?v=9"></script>
 </body>
 </html>

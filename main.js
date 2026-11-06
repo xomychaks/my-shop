@@ -50,8 +50,13 @@ const CARE = 'Стирайте при температуре не выше 30 г
 const products = [
   {
     id: 2, cat: 'tshirt', name: 'Футболка "Leopard"', price: 1450, sizes: ['XS', 'S', 'M', 'L'],
+    colors: [
+      // show — какое по счёту фото показать при выборе цвета (0 — первое); img — маленькое фото для корзины и окна размера
+      { id: 'white', name: 'Белый', hex: '#f4f4f4', show: 0, img: 'images/tshirt-1.jpg' },
+      { id: 'black', name: 'Чёрный', hex: '#111111', show: 1, img: 'images/tshirt-black.jpg' },
+    ],
     img: 'images/cat-tshirt.jpg',
-    images: ['images/tshirt-1.jpg', 'images/tshirt-3.jpg', 'images/together.jpg', 'images/sizes.jpg'],
+    images: ['images/tshirt-1.jpg', 'images/tshirt-black.jpg', 'images/together.jpg', 'images/sizes.jpg'],
     video: 'images/fit2.mp4', poster: 'images/fit2-poster.jpg',
     soldOut: false,
     tags: 'майка леопард leopard',
@@ -62,8 +67,13 @@ const products = [
   },
   {
     id: 4, cat: 'longsleeve', name: 'Лонгслив "Leopard"', price: 1850, sizes: ['XS', 'S', 'M', 'L'],
+    colors: [
+      // show — какое по счёту фото показать при выборе цвета (0 — первое); img — маленькое фото для корзины и окна размера
+      { id: 'black', name: 'Чёрный', hex: '#111111', show: 0, img: 'images/longsleeve-black.jpg' },
+      { id: 'white', name: 'Белый', hex: '#f4f4f4', show: 1, img: 'images/longsleeve-white.jpg' },
+    ],
     img: 'images/cat-longsleeve.jpg',
-    images: ['images/longsleeve-2.jpg', 'images/longsleeve-3.jpg', 'images/together.jpg', 'images/sizes.jpg'],
+    images: ['images/longsleeve-black.jpg', 'images/longsleeve-white.jpg', 'images/together.jpg', 'images/sizes.jpg'],
     video: 'images/fit2.mp4', poster: 'images/fit2-poster.jpg',
     soldOut: false,
     tags: 'лонг леопард leopard',
@@ -498,13 +508,51 @@ $('hero-order').addEventListener('click', () => {
 $('pick-close').addEventListener('click', () => { $('pick-sheet').hidden = true; });
 
 // ----- Выбор размера -----
+let chosenColor = null;
+function colorOf(p, id) { return (p.colors || []).find((c) => c.id === id) || null; }
+function thumbOf(p, color) { return (color && color.img) || p.img; }
+function sizeReady() { return !!chosen && (!current.colors || !!chosenColor); }
+function sizeAddLabel() {
+  if (!current.colors) return 'В КОРЗИНУ';
+  return chosenColor && chosen ? 'В КОРЗИНУ' : !chosenColor && !chosen ? 'ВЫБЕРИТЕ ЦВЕТ И РАЗМЕР' : !chosenColor ? 'ВЫБЕРИТЕ ЦВЕТ' : 'ВЫБЕРИТЕ РАЗМЕР';
+}
+
+// Кнопки цвета: одна функция для окна размера и для страницы товара
+function buildColors(box, p, onPick) {
+  box.innerHTML = '';
+  (p.colors || []).forEach((c) => {
+    const b = document.createElement('button');
+    b.className = 'color';
+    b.innerHTML = '<i style="--c:' + c.hex + '"></i><span>' + c.name + '</span>';
+    b.addEventListener('click', () => {
+      box.querySelectorAll('.color').forEach((x) => x.classList.toggle('on', x === b));
+      onPick(c);
+    });
+    box.appendChild(b);
+  });
+}
+
 function openSizes(p) {
   current = p;
   chosen = null;
+  chosenColor = null;
   $('size-title').textContent = p.name;
   $('size-price').textContent = money(p.price) + ' ₽';
   $('size-photo').style.backgroundImage = 'url(' + p.img + ')';
   $('size-add').disabled = true;
+  $('size-add').textContent = sizeAddLabel();
+
+  const hasColors = !!(p.colors && p.colors.length);
+  $('size-color-label').hidden = !hasColors;
+  $('size-colors').hidden = !hasColors;
+  if (hasColors) {
+    buildColors($('size-colors'), p, (c) => {
+      chosenColor = c;
+      $('size-photo').style.backgroundImage = 'url(' + thumbOf(p, c) + ')';
+      $('size-add').disabled = !sizeReady();
+      $('size-add').textContent = sizeAddLabel();
+    });
+  }
 
   const box = $('sizes');
   box.innerHTML = '';
@@ -515,7 +563,8 @@ function openSizes(p) {
     b.addEventListener('click', () => {
       chosen = s;
       box.querySelectorAll('.size').forEach((x) => x.classList.toggle('on', x === b));
-      $('size-add').disabled = false;
+      $('size-add').disabled = !sizeReady();
+      $('size-add').textContent = sizeAddLabel();
     });
     box.appendChild(b);
   });
@@ -523,8 +572,8 @@ function openSizes(p) {
 }
 
 $('size-add').addEventListener('click', () => {
-  if (!chosen) return;
-  cart.push({ name: current.name, price: current.price, size: chosen, img: current.img });
+  if (!sizeReady()) return;
+  cart.push({ name: current.name, price: current.price, size: chosen, color: chosenColor ? chosenColor.name : '', img: thumbOf(current, chosenColor) });
   haptic('success');
   renderCart();
   $('size-sheet').hidden = true;
@@ -532,11 +581,38 @@ $('size-add').addEventListener('click', () => {
 });
 
 // ----- Страница товара -----
-let pdp = { p: null, size: null, qty: 1 };
+let pdp = { p: null, size: null, color: null, qty: 1 };
+
+function renderGallery(photos) {
+  pdp.photos = photos;
+  const track = $('g-track');
+  const dots = $('g-dots');
+  track.innerHTML = '';
+  dots.innerHTML = '';
+  photos.forEach((src, i) => {
+    const s = document.createElement('div');
+    s.className = 'g-slide';
+    s.style.backgroundImage = 'url(' + src + ')';
+    track.appendChild(s);
+    const d = document.createElement('button');
+    d.className = 'g-dot' + (i === 0 ? ' on' : '');
+    d.setAttribute('aria-label', 'Фото ' + (i + 1));
+    d.addEventListener('click', () => gGo(i));
+    dots.appendChild(d);
+  });
+  track.scrollLeft = 0;
+  gTarget = 0; gBusyUntil = 0;
+  photos.forEach((src) => { const im = new Image(); im.src = src; }); // заранее, чтобы не было белых кадров
+  const many = photos.length > 1;
+  dots.hidden = !many;
+  $('g-prev').hidden = !many;
+  $('g-next').hidden = !many;
+  updateGallery();
+}
 
 function renderProduct(p) {
   if (!p) return go('home');
-  pdp = { p, size: null, qty: 1 };
+  pdp = { p, size: null, color: null, qty: 1 };
   const photos = p.images && p.images.length ? p.images : [p.img];
 
   $('pdp-crumb').textContent = p.name.toUpperCase();
@@ -563,29 +639,18 @@ function renderProduct(p) {
   det.hidden = !det.children.length;
 
   // Галерея: фото листаются пальцем, стрелками и точками
-  const track = $('g-track');
-  const dots = $('g-dots');
-  track.innerHTML = '';
-  dots.innerHTML = '';
-  photos.forEach((src, i) => {
-    const s = document.createElement('div');
-    s.className = 'g-slide';
-    s.style.backgroundImage = 'url(' + src + ')';
-    track.appendChild(s);
-    const d = document.createElement('button');
-    d.className = 'g-dot' + (i === 0 ? ' on' : '');
-    d.setAttribute('aria-label', 'Фото ' + (i + 1));
-    d.addEventListener('click', () => gGo(i));
-    dots.appendChild(d);
-  });
-  track.scrollLeft = 0;
-  gTarget = 0; gBusyUntil = 0;
-  photos.forEach((src) => { const im = new Image(); im.src = src; }); // заранее, чтобы не было белых кадров
-  const many = photos.length > 1;
-  dots.hidden = !many;
-  $('g-prev').hidden = !many;
-  $('g-next').hidden = !many;
-  updateGallery();
+  renderGallery(photos);
+
+  // Цвет
+  const hasColors = !!(p.colors && p.colors.length);
+  $('pdp-color-box').hidden = !hasColors;
+  if (hasColors) {
+    buildColors($('pdp-colors'), p, (c) => {
+      pdp.color = c;
+      if (typeof c.show === 'number') gGo(c.show); // листаем к фото выбранного цвета
+      updateBuy();
+    });
+  }
 
   // Размеры
   const box = $('pdp-sizes');
@@ -631,18 +696,23 @@ $('g-prev').addEventListener('click', () => gGo(gBase() - 1));
 $('g-next').addEventListener('click', () => gGo(gBase() + 1));
 
 function updateBuy() {
+  const needColor = !!(pdp.p && pdp.p.colors && pdp.p.colors.length);
+  const haveColor = !needColor || !!pdp.color;
   $('pdp-size-label').textContent = pdp.size || 'НЕ ВЫБРАН';
+  $('pdp-color-label').textContent = pdp.color ? pdp.color.name.toUpperCase() : 'НЕ ВЫБРАН';
   $('pdp-qty').textContent = pdp.qty;
-  $('pdp-add').disabled = !pdp.size;
-  $('pdp-add').textContent = pdp.size ? 'ДОБАВИТЬ В КОРЗИНУ' : 'ВЫБЕРИТЕ РАЗМЕР';
+  $('pdp-add').disabled = !(pdp.size && haveColor);
+  $('pdp-add').textContent = pdp.size && haveColor ? 'ДОБАВИТЬ В КОРЗИНУ'
+    : !pdp.size && !haveColor ? 'ВЫБЕРИТЕ ЦВЕТ И РАЗМЕР' : !haveColor ? 'ВЫБЕРИТЕ ЦВЕТ' : 'ВЫБЕРИТЕ РАЗМЕР';
 }
 $('pdp-minus').addEventListener('click', () => { pdp.qty = Math.max(1, pdp.qty - 1); updateBuy(); });
 $('pdp-plus').addEventListener('click', () => { pdp.qty = Math.min(9, pdp.qty + 1); updateBuy(); });
 
 $('pdp-add').addEventListener('click', () => {
   if (!pdp.p || !pdp.size) return;
+  if (pdp.p.colors && pdp.p.colors.length && !pdp.color) return;
   for (let i = 0; i < pdp.qty; i++) {
-    cart.push({ name: pdp.p.name, price: pdp.p.price, size: pdp.size, img: pdp.p.img });
+    cart.push({ name: pdp.p.name, price: pdp.p.price, size: pdp.size, color: pdp.color ? pdp.color.name : '', img: thumbOf(pdp.p, pdp.color) });
   }
   haptic('success');
   renderCart();
@@ -857,7 +927,7 @@ function renderCart() {
 
   const groups = {};
   cart.forEach((it) => {
-    const k = it.name + '|' + it.size;
+    const k = it.name + '|' + (it.color || '') + '|' + it.size;
     groups[k] = groups[k] || { item: it, qty: 0 };
     groups[k].qty++;
   });
@@ -868,14 +938,14 @@ function renderCart() {
     el.innerHTML =
       '<div class="thumb" style="background-image:url(' + item.img + ')"></div>' +
       '<div class="info"><div>' + item.name + '</div>' +
-      '<div class="small">Размер: ' + item.size + '</div>' +
+      '<div class="small">' + (item.color ? 'Цвет: ' + item.color + ' · ' : '') + 'Размер: ' + item.size + '</div>' +
       '<div class="qty"><button>−</button><span>' + qty + '</span><button>+</button></div></div>' +
       '<div>' + money(item.price * qty) + ' ₽</div>';
 
     const [minus, plus] = el.querySelectorAll('.qty button');
     plus.addEventListener('click', () => { cart.push({ ...item }); renderCart(); });
     minus.addEventListener('click', () => {
-      const i = cart.findIndex((c) => c.name === item.name && c.size === item.size);
+      const i = cart.findIndex((c) => c.name === item.name && c.size === item.size && (c.color || '') === (item.color || ''));
       cart.splice(i, 1);
       renderCart();
     });
@@ -908,12 +978,12 @@ document.querySelectorAll('.sheet').forEach((sheet) => {
 function cartLines() {
   const groups = {};
   cart.forEach((it) => {
-    const k = it.name + '|' + it.size;
+    const k = it.name + '|' + (it.color || '') + '|' + it.size;
     groups[k] = groups[k] || { item: it, qty: 0 };
     groups[k].qty++;
   });
   return Object.values(groups).map(({ item, qty }, i) =>
-    (i + 1) + '. ' + item.name + ' (' + item.size + ') × ' + qty + ' — ' + money(item.price * qty) + ' ₽');
+    (i + 1) + '. ' + item.name + ', ' + (item.color ? 'цвет: ' + item.color.toLowerCase() + ', ' : '') + 'размер: ' + item.size + ' × ' + qty + ' — ' + money(item.price * qty) + ' ₽');
 }
 
 function cartSum() { return cart.reduce((s, it) => s + it.price, 0); }
